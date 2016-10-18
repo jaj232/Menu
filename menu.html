@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+
+<link href='fullcal/fullcalendar.css' rel='stylesheet' />
+<link href='fullcal/fullcalendar.print.css' rel='stylesheet' media='print' />
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src='fullcal/lib/moment.min.js'></script>
+<script src='fullcal/lib/jquery.min.js'></script>
+<script src='fullcal/lib/jquery-ui.min.js'></script>
+<script src='jquery.ui.touch.js'></script>
+<script src='fullcal/fullcalendar.min.js'></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+
+	$(document).ready(function() {
+
+		$('#external-events .fc-event').each(function() {
+			$(this).draggable({
+				zIndex: 999,
+				revert: true,
+				revertDuration: 0
+			});
+			
+			$(this).addTouch();
+			
+		});
+
+		var originalDate;
+
+		$('#calendar').fullCalendar({
+			
+			eventRender: function(event, element) {
+				$(element).addTouch();
+			},
+			
+			height: 'auto',
+			allDayText: '',
+			header: {
+				left: 'prev,next',
+				center: 'title',
+				right: 'month,listWeek,listDay'
+			},
+			views: {
+				listDay: { buttonText: 'day' },
+				listWeek: { buttonText: 'week' }
+			},
+			editable: true,
+			droppable: true, 
+			eventDragStart: function(event) {
+				originalDate = event.start.format();
+			},
+			eventDrop: function(event, delta, revertFunc) 
+			{
+console.log("update event: " + event.id + " from this date: " + originalDate);
+console.log("to: " + event.start.format());
+			},
+			eventClick: function(event, jsEvent, view) {
+
+				var modalHtml = '<div class = "alert alert-info alert-dismissable">'+
+				   '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">'+
+					' &times; </button><u>'+
+					event.start.format('dddd, MMMM DD') + '</u>:   ' + event.title + ' - ' + 
+					event.description +	'</div>' ;
+
+				$('#modal_div').html(modalHtml);
+
+			},
+			eventLimit: true, 
+			drop: function(date,jsEvent,ui,resourceId) {
+console.log("add: " + $(this).attr('menu_id') + " " + date.format());
+				//save information and return the primary key id here
+				var newID = Math.round(Math.random()*10000);
+				eventData = {
+						id: newID,
+						menu_id: $(this).attr('menu_id'),
+						title: $(this).attr('title'),
+						description: $(this).attr('description'),
+						start: date.format()
+					};
+					console.log(eventData);
+					$('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+
+			},
+			eventDragStop: function(event,jsEvent) {
+				var DeleteWidth = $('#delete_area').innerWidth();
+				var DeleteHeight = $('#delete_area').innerHeight();
+				var top = $('#delete_area').position().top;
+				var left = $('#delete_area').position().left;
+
+				
+				//test if user dragged it to the trash icon
+				if(left < jsEvent.pageX && jsEvent.pageX < (left + DeleteWidth) &&
+					top < jsEvent.pageY && jsEvent.pageY < (top + DeleteHeight))
+				{
+					console.log('delete: ' + event.id);
+					$('#calendar').fullCalendar('removeEvents', event.id);
+				}
+				
+			},
+			dragRevertDuration: 0,//dont delay the default 500 ms
+			events: 
+			[
+				{
+					id: 1000,//id references a unique instance
+					menu_id: 1,
+					title: 'Bread loaf special',
+					description: 'Bread instructions',
+					start: '2016-10-16'
+				},
+				{
+					id: 1001,
+					menu_id: 2,
+					title: 'Shrimp Tacos',
+					description: 'Shrimp taco instructions',
+					start: '2016-10-17'
+				},
+				{
+					id: 1002,
+					menu_id: 3,
+					title: 'Cheese Pizza',
+					description: 'Pizza instructions',
+					start: '2016-10-18'
+				},
+				{
+					id: 1003,
+					menu_id: 4,
+					title: 'Garfield Lasagna',
+					description: 'Put some pasta and cheese and meat in a big glass bowl.  Stir.  Then put it in the oven.',
+					start: '2016-10-19'
+				},
+				{
+					id: 1004,
+					menu_id: 5,
+					title: 'Pasta Noodles',
+					description: 'Noodle instructions',
+					start: '2016-10-20'
+				},
+				{
+					id: 1005,
+					menu_id: 1,
+					title: 'Bread loaf special',
+					description: 'Bread instructions...',
+					start: '2016-10-21'
+				}
+			]
+		});
+
+		//show title and description when you click on Menu Options section
+		$('#external-events').children().click(function(){
+			var modalHtml = '<div class = "alert alert-info alert-dismissable">'+
+			'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">'+
+			' &times; </button>'+
+			$(this).attr('title') + ' - ' + $(this).attr('description') +
+			'</div>' ;
+
+			$('#modal_div').html(modalHtml);
+		});
+
+		$('.fc-right').children().children().eq(0).click(function(){
+			$('#menu_options_div').show();
+			$('#menu_items').show();
+			$('#calendar').fullCalendar('option', 'contentHeight', 'auto');
+		});
+		
+		$('.fc-right').children().children().eq(1).click(function(){
+			$('#menu_options_div').hide();
+			$('#menu_items').hide();
+			$('#calendar').fullCalendar('option', 'contentHeight', 650);
+		});
+		
+		$('.fc-right').children().children().eq(2).click(function(){
+			$('#menu_options_div').hide();
+			$('#menu_items').hide();
+			$('#calendar').fullCalendar('option', 'contentHeight', 650);
+		});
+		
+		$('#delete_area').click(function(){
+			alert('Drag menu item here to delete.');
+		});
+		
+		$('#add_menu_item').click(function(){
+			alert('Go to Manage Menu screen to add, edit, delete menu items.');
+		});
+		
+		$("#search").on("input", function() {
+			SearchMenu(this.value.toUpperCase());
+		});
+		
+	});
+
+function SearchMenu(searchText)//dynamically populate Menu Items
+{
+	$('#external-events').children().each(function () {
+		var menuText = $(this).attr('title').toUpperCase();
+		
+		if(menuText.indexOf(searchText) > -1 || searchText == '')
+		{
+			$(this).show();
+		}
+		else
+		{
+			$(this).hide();
+		}
+	});
+}
+	
+</script>
+<style>
+
+	body {
+		margin: auto;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+	
+	.pageDiv{
+		background-color: #F0F4F5; 
+		border-radius: 15px;
+		border-width: 1px;
+		border-style: solid;
+		border-color: lightgrey;
+		margin: 15px;
+	}
+
+	#calendar {
+		border-width: 1px;
+		border-style: solid;
+		border-color: lightgrey;
+		border-radius: 5px;
+		margin: 0 auto;
+		background-color:white;
+	}
+		
+	#external-events {
+		padding: 0 10px;
+		border: 1px solid #ccc;
+		text-align: center;
+	}
+
+	#external-events .fc-event {
+		margin: 10px 0;
+		cursor: pointer;
+	}
+
+</style>
+</head>
+<body>
+<div class="pageDiv" >
+	<div class="container-fluid">
+		
+		<div id="menu_options_div" class="panel panel-success">
+			<div class="panel-heading">
+				Calendar
+			</div>
+			<div class="panel-body bg-warning">
+				<button id="add_menu_item" type="button" 
+					class="btn btn-default col-xs-5 glyphicon glyphicon-cutlery">
+					Menu
+				</button>
+				<span class="col-xs-7"></span>
+			</div>
+		</div>
+		
+		<div id='calendar'></div>
+		
+	</div>
+	<br>
+	<div class="container-fluid" id="modal_div"></div>
+	
+	<div class="container-fluid">
+		<div id="menu_items" class="panel panel-success">
+
+			<div class="panel-heading clearfix">
+				<input id="search" type="text" placeholder="Search Menu"  
+					class="input-lg col-xs-5" />
+				<span class="col-xs-1"></span>
+				<button id="delete_area" type="button" 
+					class="btn btn-default btn-lg disabled col-xs-6 glyphicon glyphicon-trash">
+					Trash
+				</button>
+			</div>
+		
+			<div id='external-events' class="panel-body bg-warning" >
+				<div class='fc-event btn-lg' menu_id="1" title="Bread loaf special" 
+                    description="Bread instructions..." >Bread loaf special</div>
+                <div class='fc-event btn-lg' menu_id="2" title="Shrimp Tacos" 
+                    description="Shrimp taco instructions" >Shrimp Tacos</div>
+                <div class='fc-event btn-lg' menu_id="3" title="Cheese Pizza" 
+                    description="Cheese pizza instructions" >Cheese Pizza</div>
+                <div class='fc-event btn-lg' menu_id="4" title="Garfield Lasagna" 
+                    description="Put some pasta and cheese and meat in a big glass bowl.  Stir.  Then put it in the oven." >Garfield Lasagna</div>
+                <div class='fc-event btn-lg' menu_id="5" title="Pasta Noodles" 
+                    description="Pasta Noodles instructions" >Pasta Noodles</div>
+			</div>
+			
+		</div>
+	</div>
+</div>
+
+<div class="pageDiv" ></div>
+
+</body>
+</html>
